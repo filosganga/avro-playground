@@ -1,4 +1,5 @@
 package com.github.filosganga.avro.playground
+import com.github.filosganga.avro.playground.model._
 import com.sksamuel.avro4s._
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.{Schema, SchemaBuilder}

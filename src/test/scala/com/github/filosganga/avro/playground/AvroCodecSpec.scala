@@ -1,6 +1,7 @@
 package com.github.filosganga.avro.playground
 import java.io.ByteArrayOutputStream
 
+import com.github.filosganga.avro.playground.model._
 import com.sksamuel.avro4s._
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericDatumReader, GenericDatumWriter, GenericRecord}

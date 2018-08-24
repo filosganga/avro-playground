@@ -1,5 +1,8 @@
 package com.github.filosganga.avro.playground
-import org.scalacheck.{Gen, Arbitrary}, Gen._, Arbitrary._
+import org.scalacheck.{Arbitrary, Gen}
+import Gen._
+import Arbitrary._
+import com.github.filosganga.avro.playground.model._
 
 trait Arbitraries {
 
