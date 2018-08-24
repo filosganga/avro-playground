@@ -5,7 +5,7 @@ import org.apache.avro.{Schema, SchemaBuilder}
 
 trait AvroCodec {
 
-  implicit val pizzaSchemaFor: SchemaFor[Pizza] = new SchemaFor[Pizza] {
+  implicit lazy val pizzaSchemaFor: SchemaFor[Pizza] = new SchemaFor[Pizza] {
 
     override def apply(): Schema =
       SchemaBuilder
@@ -16,7 +16,7 @@ trait AvroCodec {
         .endRecord()
   }
 
-  implicit val pizzaToRecord: ToRecord[Pizza] = new ToRecord[Pizza] {
+  implicit lazy val pizzaToRecord: ToRecord[Pizza] = new ToRecord[Pizza] {
     override def apply(t: Pizza): GenericRecord =
       new GenericRecordBuilder(pizzaSchemaFor())
         .set("size", t.size)
@@ -24,16 +24,13 @@ trait AvroCodec {
         .build()
   }
 
-  implicit val pizzaFromRecord: FromRecord[Pizza] = new FromRecord[Pizza] {
+  implicit lazy val pizzaFromRecord: FromRecord[Pizza] = new FromRecord[Pizza] {
     override def apply(record: GenericRecord): Pizza =
-      Pizza(
-        size = record.get("size").asInstanceOf[Integer],
-        flavour = record.get("flavour").toString
-      )
+      Pizza(size = record.get("size").asInstanceOf[Integer], flavour = record.get("flavour").toString)
 
   }
 
-  implicit val pastaSchemaFor: SchemaFor[Pasta] = new SchemaFor[Pasta] {
+  implicit lazy val pastaSchemaFor: SchemaFor[Pasta] = new SchemaFor[Pasta] {
 
     override def apply(): Schema =
       SchemaBuilder
@@ -45,7 +42,7 @@ trait AvroCodec {
         .endRecord()
   }
 
-  implicit val pastaToRecord: ToRecord[Pasta] = new ToRecord[Pasta] {
+  implicit lazy val pastaToRecord: ToRecord[Pasta] = new ToRecord[Pasta] {
     override def apply(t: Pasta): GenericRecord =
       new GenericRecordBuilder(pastaSchemaFor())
         .set("weight", t.weight)
@@ -54,7 +51,7 @@ trait AvroCodec {
         .build()
   }
 
-  implicit val pastaFromRecord: FromRecord[Pasta] = new FromRecord[Pasta] {
+  implicit lazy val pastaFromRecord: FromRecord[Pasta] = new FromRecord[Pasta] {
     override def apply(record: GenericRecord): Pasta =
       Pasta(
         weight = record.get("weight").asInstanceOf[Integer],
@@ -63,44 +60,32 @@ trait AvroCodec {
       )
   }
 
-  implicit val dishSchemaFor: SchemaFor[Dish] = new SchemaFor[Dish] {
-    override def apply(): Schema =
-      SchemaBuilder
-        .record(classOf[Dish].getName)
-        .fields()
-        .name("child")
-        .`type`(
-          SchemaBuilder
-            .unionOf()
-            .`type`(SchemaFor[Pizza]())
-            .and()
-            .`type`(SchemaFor[Pasta]())
-            .endUnion()
-        )
-        .noDefault()
-        .endRecord()
-
+  implicit lazy val dishToSchema: ToSchema[Dish] = new ToSchema[Dish] {
+    override protected val schema: Schema = SchemaBuilder
+      .unionOf()
+      .`type`(SchemaFor[Pizza]())
+      .and()
+      .`type`(SchemaFor[Pasta]())
+      .endUnion()
   }
 
-  implicit val dishToRecord: ToRecord[Dish] = new ToRecord[Dish] {
-    override def apply(t: Dish): GenericRecord =
-      new GenericRecordBuilder(dishSchemaFor())
-        .set("child", t match {
-          case p: Pasta => pastaToRecord(p)
-          case p: Pizza => pizzaToRecord(p)
-        })
-        .build()
+
+  implicit lazy val dishToValue: ToValue[Dish] = new ToValue[Dish] {
+    override def apply(value: Dish): Any = value match {
+      case p: Pasta => pastaToRecord(p)
+      case p: Pizza => pizzaToRecord(p)
+    }
   }
 
-  implicit val dishFromRecord: FromRecord[Dish] = new FromRecord[Dish] {
+  implicit lazy val dishFromValue: FromValue[Dish] = new FromValue[Dish] {
     private val PizzaSchema = pizzaSchemaFor()
     private val PastaSchema = pastaSchemaFor()
 
-    override def apply(record: GenericRecord): Dish = {
-      val child = record.get("child").asInstanceOf[GenericRecord]
-      child.getSchema match {
-        case PizzaSchema => pizzaFromRecord(child)
-        case PastaSchema => pastaFromRecord(child)
+    override def apply(value: Any, field: Schema.Field): Dish = {
+      val record = value.asInstanceOf[GenericRecord]
+      record.getSchema match {
+        case PizzaSchema => pizzaFromRecord(value.asInstanceOf[GenericRecord])
+        case PastaSchema => pastaFromRecord(value.asInstanceOf[GenericRecord])
       }
     }
   }

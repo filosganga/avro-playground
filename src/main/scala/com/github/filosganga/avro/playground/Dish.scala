@@ -1,5 +1,8 @@
 package com.github.filosganga.avro.playground
 
+
+case class Order(id: String, dish: Dish)
+
 sealed trait Dish
 
 case class Pizza(size: Int, flavour: String) extends Dish 

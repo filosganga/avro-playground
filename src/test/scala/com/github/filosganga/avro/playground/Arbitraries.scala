@@ -18,4 +18,10 @@ trait Arbitraries {
 
   implicit lazy val arbDish: Arbitrary[Dish] =
     Arbitrary(oneOf(arbitrary[Pasta], arbitrary[Pizza]))
+
+  implicit lazy val arbOrder: Arbitrary[Order] =
+    Arbitrary(for {
+      id <- identifier
+      dish <- arbitrary[Dish]
+    } yield Order(id, dish))
 }

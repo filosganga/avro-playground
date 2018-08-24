@@ -14,45 +14,61 @@ class AvroCodecSpec extends WordSpec with Matchers with AvroCodec with Generator
     "generate correct schema" in {
       val expectedSchema = new Schema.Parser().parse("""
           |{
-          |  "type" : "record",
-          |  "name" : "Dish",
-          |  "namespace" : "com.github.filosganga.avro.playground",
-          |  "fields" : [ {
-          |    "name" : "child",
-          |    "type" : [ {
-          |      "type" : "record",
-          |      "name" : "Pizza",
-          |      "fields" : [ {
-          |        "name" : "size",
-          |        "type" : "int"
-          |      }, {
-          |        "name" : "flavour",
-          |        "type" : "string"
-          |      } ]
-          |    }, {
-          |      "type" : "record",
-          |      "name" : "Pasta",
-          |      "fields" : [ {
-          |        "name" : "weight",
-          |        "type" : "int"
-          |      }, {
-          |        "name" : "format",
-          |        "type" : "string"
-          |      }, {
-          |        "name" : "seasoning",
-          |        "type" : "string"
-          |      } ]
-          |    } ]
-          | } ]
-          | }
+          |    "fields": [
+          |        {
+          |            "name": "id",
+          |            "type": "string"
+          |        },
+          |        {
+          |            "name": "dish",
+          |            "type": [
+          |                {
+          |                    "fields": [
+          |                        {
+          |                            "name": "size",
+          |                            "type": "int"
+          |                        },
+          |                        {
+          |                            "name": "flavour",
+          |                            "type": "string"
+          |                        }
+          |                    ],
+          |                    "name": "Pizza",
+          |                    "type": "record"
+          |                },
+          |                {
+          |                    "fields": [
+          |                        {
+          |                            "name": "weight",
+          |                            "type": "int"
+          |                        },
+          |                        {
+          |                            "name": "format",
+          |                            "type": "string"
+          |                        },
+          |                        {
+          |                            "name": "seasoning",
+          |                            "type": "string"
+          |                        }
+          |                    ],
+          |                    "name": "Pasta",
+          |                    "type": "record"
+          |                }
+          |            ]
+          |        }
+          |    ],
+          |    "name": "Order",
+          |    "namespace": "com.github.filosganga.avro.playground",
+          |    "type": "record"
+          |}
         """.stripMargin)
 
-      dishSchemaFor() shouldBe expectedSchema
+      SchemaFor[Order]() shouldBe expectedSchema
 
     }
 
-    "be able to serialize and deserialize" in forAll { dish: Dish =>
-      serializeAndDeserialize(dish) shouldBe dish
+    "be able to serialize and deserialize" in forAll { order: Order =>
+      serializeAndDeserialize(order) shouldBe order
     }
 
   }
